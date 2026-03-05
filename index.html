@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SibiMoto Inventario 10</title>
+    <title>SibiMoto Inventario 20 Compact</title>
     <!-- Libreria PDF esterna -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -11,118 +11,106 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f7f6f3; 
+            background-color: #f0f2f5; 
             margin: 0; 
             padding: 0; 
-            color: #333;
+            color: #1a1a1b;
         }
         
         /* Navigazione */
         nav { 
             background: white; 
             border-bottom: 1px solid #ddd; 
-            padding: 12px 15px; 
+            padding: 10px 15px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             position: sticky; 
             top: 0; 
             z-index: 100;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .logo { font-weight: 800; font-size: 20px; color: #2383e2; letter-spacing: -0.5px; }
+        .logo { font-weight: 800; font-size: 18px; color: #2383e2; }
         
         .btn-group { display: flex; gap: 8px; }
         button { 
-            padding: 10px 16px; 
-            border-radius: 8px; 
+            padding: 8px 14px; 
+            border-radius: 6px; 
             border: none; 
             font-weight: bold; 
-            font-size: 14px; 
+            font-size: 13px; 
             cursor: pointer; 
-            transition: transform 0.1s, background 0.2s; 
         }
         .btn-pdf { background-color: #2383e2; color: white; }
-        .btn-clear { background-color: #f0f0f0; color: #666; }
-        button:active { transform: scale(0.95); }
+        .btn-clear { background-color: #e4e6eb; color: #4b4b4b; }
         
         /* Contenitore */
-        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .container { padding: 10px; max-width: 500px; margin: auto; }
         
         /* Card Scooter */
         .row-card { 
             background: white; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 12px; 
-            margin-bottom: 15px; 
-            padding: 15px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            padding: 10px; 
         }
         .row-header { 
             display: flex; 
             justify-content: space-between; 
-            margin-bottom: 12px; 
-            border-bottom: 1px solid #f0f0f0; 
-            padding-bottom: 8px; 
+            margin-bottom: 8px; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 4px; 
         }
-        .row-number { font-size: 11px; color: #999; font-weight: 800; text-transform: uppercase; }
+        .row-number { font-size: 9px; color: #888; font-weight: 800; }
         
-        .row-content { display: flex; gap: 15px; align-items: flex-start; }
+        .row-content { display: flex; gap: 10px; align-items: center; }
         
         /* Box Foto */
         .photo-box { 
-            width: 90px; height: 90px; 
-            border: 2px dashed #cbd5e0; 
-            border-radius: 10px; 
-            background: #f8fafc; 
+            width: 70px; height: 70px; 
+            border: 2px dashed #ccc; 
+            border-radius: 6px; 
+            background: #fafafa; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             flex-shrink: 0; 
             overflow: hidden; 
             cursor: pointer;
-            position: relative;
         }
         .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        .plus-icon { width: 28px; height: 28px; fill: #2383e2; opacity: 0.6; }
+        .plus-icon { width: 20px; height: 20px; fill: #2383e2; }
         .has-img .plus-icon { display: none; }
-        .has-img { border-style: solid; border-color: #2383e2; }
 
         /* Input */
-        .inputs { flex-grow: 1; }
-        .field { margin-bottom: 10px; }
-        label { display: block; font-size: 10px; color: #aaa; text-transform: uppercase; margin-bottom: 3px; font-weight: 700; }
+        .inputs { flex-grow: 1; display: grid; grid-template-columns: 1fr; gap: 4px; }
+        .field { display: flex; align-items: center; gap: 5px; }
+        label { font-size: 8px; color: #999; font-weight: 700; min-width: 45px; text-transform: uppercase; }
         input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 6px; 
-            font-size: 16px; 
-            box-sizing: border-box; 
+            flex-grow: 1;
+            padding: 5px 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 14px; 
             background: #fff; 
-            -webkit-appearance: none; 
-            transition: border-color 0.2s;
         }
-        input:focus { border-color: #2383e2; outline: none; }
         
-        /* Overlay Caricamento */
+        /* Loading */
         .loading-overlay { 
             display: none; 
             position: fixed; 
             top: 0; left: 0; 
             width: 100%; height: 100%; 
             background: rgba(255,255,255,0.9); 
-            color: #2383e2; 
             justify-content: center; 
             align-items: center; 
             z-index: 1000; 
             flex-direction: column; 
-            gap: 15px; 
         }
         .spinner { 
-            width: 40px; height: 40px; 
-            border: 4px solid #f3f3f3; 
-            border-top: 4px solid #2383e2; 
+            width: 30px; height: 30px; 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #2383e2; 
             border-radius: 50%; 
             animation: spin 1s linear infinite; 
         }
@@ -133,21 +121,20 @@
 
     <div id="loading" class="loading-overlay">
         <div class="spinner"></div>
-        <div style="font-weight: bold;">Generazione PDF in corso...</div>
+        <p style="font-weight: bold; margin-top: 10px;">Compattazione PDF...</p>
     </div>
 
     <nav>
         <div class="logo">SIBIMOTO</div>
         <div class="btn-group">
-            <button class="btn-clear" onclick="if(confirm('Vuoi cancellare tutto?')) window.location.reload()">Svuota</button>
-            <button class="btn-pdf" id="pdfBtn" onclick="generatePDF()">Genera PDF</button>
+            <button class="btn-clear" onclick="window.location.reload()">Svuota</button>
+            <button class="btn-pdf" onclick="generatePDF()">Genera PDF A4</button>
         </div>
     </nav>
 
     <div class="container" id="mainContainer">
-        <!-- Generazione dinamica di 10 righe -->
         <script>
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 20; i++) {
                 document.write(`
                     <div class="row-card">
                         <div class="row-header"><span class="row-number">UNITÀ #${i+1}</span></div>
@@ -156,11 +143,11 @@
                                 <svg class="plus-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                                 <img id="img-${i}" style="display:none">
                             </div>
-                            <input type="file" id="in-${i}" style="display:none" accept="image/*" capture="camera" onchange="previewAndCompress(this, ${i})">
+                            <input type="file" id="in-${i}" style="display:none" accept="image/*" capture="camera" onchange="handleImage(this, ${i})">
                             <div class="inputs">
-                                <div class="field"><label>Modello</label><input type="text" id="mod-${i}" placeholder="Esempio: Honda SH"></div>
-                                <div class="field"><label>Targa</label><input type="text" id="tar-${i}" placeholder="AA000BB" style="text-transform:uppercase"></div>
-                                <div class="field"><label>Ubicazione</label><input type="text" id="pos-${i}" placeholder="Fila/Posto"></div>
+                                <div class="field"><label>Modello</label><input type="text" id="mod-${i}" placeholder="SH 150"></div>
+                                <div class="field"><label>Targa</label><input type="text" id="tar-${i}" placeholder="Targa" style="text-transform:uppercase"></div>
+                                <div class="field"><label>Pos.</label><input type="text" id="pos-${i}" placeholder="Fila/Posto"></div>
                             </div>
                         </div>
                     </div>
@@ -170,11 +157,9 @@
     </div>
 
     <script>
-        // Array per contenere le immagini in base64 (ora 10 elementi)
-        const photos = Array(10).fill(null);
+        const photos = Array(20).fill(null);
 
-        // Funzione per comprimere le foto caricate per non appesantire il PDF
-        function previewAndCompress(input, i) {
+        function handleImage(input, i) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -182,27 +167,15 @@
                     tempImg.src = e.target.result;
                     tempImg.onload = function() {
                         const canvas = document.createElement('canvas');
-                        const MAX_SIZE = 800; // Ridimensionamento massimo per mantenere fluido il browser
-                        let width = tempImg.width;
-                        let height = tempImg.height;
-
-                        if (width > height) {
-                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                        } else {
-                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(tempImg, 0, 0, width, height);
-                        
-                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                        photos[i] = compressedBase64;
-                        
-                        const imgDisplay = document.getElementById('img-' + i);
-                        imgDisplay.src = compressedBase64;
-                        imgDisplay.style.display = 'block';
+                        const MAX = 600; 
+                        let w = tempImg.width, h = tempImg.height;
+                        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
+                        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(tempImg, 0, 0, w, h);
+                        photos[i] = canvas.toDataURL('image/jpeg', 0.6);
+                        document.getElementById('img-' + i).src = photos[i];
+                        document.getElementById('img-' + i).style.display = 'block';
                         document.getElementById('box-' + i).classList.add('has-img');
                     }
                 }
@@ -214,79 +187,76 @@
             const { jsPDF } = window.jspdf;
             const loader = document.getElementById('loading');
             loader.style.display = 'flex';
-
-            // Pausa per permettere al loader di renderizzare
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(r => setTimeout(r, 500));
 
             try {
                 const doc = new jsPDF();
                 let hasData = false;
-                let currentY = 35;
+                let y = 25;
+                let page = 1;
 
-                // Header PDF
-                doc.setFillColor(35, 131, 226);
-                doc.rect(0, 0, 210, 25, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(18);
-                doc.text("INVENTARIO SIBIMOTO", 15, 17);
-                
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text("Data: " + new Date().toLocaleDateString('it-IT') + " " + new Date().toLocaleTimeString('it-IT'), 150, 17);
+                function header() {
+                    doc.setFillColor(35, 131, 226);
+                    doc.rect(0, 0, 210, 15, 'F');
+                    doc.setTextColor(255);
+                    doc.setFontSize(12);
+                    doc.text("SIBIMOTO - Inventario Rapido", 15, 10);
+                    doc.setFontSize(8);
+                    doc.text("Pagina " + page, 185, 10);
+                }
 
-                for (let i = 0; i < 10; i++) {
+                header();
+
+                for (let i = 0; i < 20; i++) {
                     const mod = document.getElementById('mod-' + i).value;
                     const tar = document.getElementById('tar-' + i).value;
                     const pos = document.getElementById('pos-' + i).value;
 
-                    // Aggiungi al PDF solo se c'è almeno un dato o una foto
                     if (mod || photos[i] || tar) {
                         hasData = true;
                         
-                        // Controllo cambio pagina
-                        if (currentY > 240) { 
-                            doc.addPage(); 
-                            currentY = 20; 
+                        // Controllo salto pagina (10 unità per pagina circa)
+                        if (y > 270) { 
+                            doc.addPage();
+                            page++;
+                            y = 25;
+                            header();
                         }
 
-                        // Cornice elemento
+                        // Riga ultra compatta (altezza 24mm)
                         doc.setDrawColor(230);
-                        doc.setLineWidth(0.1);
-                        doc.roundedRect(15, currentY, 180, 48, 3, 3, 'D');
+                        doc.line(15, y - 5, 195, y - 5); // Linea separatrice
 
-                        // Inserimento Immagine
+                        // Foto mini
                         if (photos[i]) {
-                            doc.addImage(photos[i], 'JPEG', 18, currentY + 4, 34, 40);
+                            doc.addImage(photos[i], 'JPEG', 15, y, 22, 22);
                         } else {
-                            doc.setDrawColor(245);
-                            doc.rect(18, currentY + 4, 34, 40);
-                            doc.setFontSize(8);
-                            doc.setTextColor(210);
-                            doc.text("NESSUNA FOTO", 22, currentY + 24);
+                            doc.setDrawColor(240);
+                            doc.rect(15, y, 22, 22);
+                            doc.setFontSize(6); doc.setTextColor(200);
+                            doc.text("NO FOTO", 19, y + 12);
                         }
 
-                        // Testi Mezzo
-                        doc.setFontSize(12); doc.setTextColor(0); doc.setFont("helvetica", "bold");
-                        doc.text(mod.toUpperCase() || "MEZZO SENZA NOME", 58, currentY + 15);
+                        // Testi affiancati
+                        doc.setTextColor(0);
+                        doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                        doc.text("#" + (i+1) + " " + (mod.toUpperCase() || "---"), 42, y + 5);
                         
-                        doc.setFontSize(10); doc.setTextColor(35, 131, 226);
-                        doc.text("TARGA: " + (tar.toUpperCase() || "NON INSERITA"), 58, currentY + 25);
+                        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+                        doc.setTextColor(35, 131, 226);
+                        doc.text("TARGA: " + (tar.toUpperCase() || "---"), 42, y + 12);
                         
-                        doc.setFontSize(10); doc.setTextColor(100); doc.setFont("helvetica", "normal");
-                        doc.text("UBICAZIONE: " + (pos || "NON SPECIFICATA"), 58, currentY + 35);
+                        doc.setTextColor(100);
+                        doc.text("POSIZIONE: " + (pos || "---"), 42, y + 19);
 
-                        currentY += 55;
+                        y += 26; // Incremento verticale ridotto
                     }
                 }
 
-                if (!hasData) {
-                    alert("Compila almeno un'unità prima di generare il PDF!");
-                } else {
-                    doc.save("Inventario_SibiMoto_Completo.pdf");
-                }
-            } catch (err) {
-                alert("Si è verificato un errore durante la creazione: " + err.message);
+                if (!hasData) alert("Inserisci dati!");
+                else doc.save("SibiMoto_A4_Compatto.pdf");
+            } catch (e) {
+                alert(e.message);
             } finally {
                 loader.style.display = 'none';
             }
