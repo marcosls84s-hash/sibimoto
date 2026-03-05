@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SibiMoto - Inserimento</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding-bottom: 120px; }
+        #auth { position: fixed; inset: 0; background: #1a1a1b; z-index: 10000; display: flex; align-items: center; justify-content: center; color: white; }
+        nav { background: white; padding: 10px; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-container { max-width: 500px; margin: auto; display: flex; gap: 10px; }
+        .nav-btn { flex: 1; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: none; cursor: pointer; }
+        .btn-blue { background: #2383e2; color: white; }
+        .btn-outline { background: white; color: #2383e2; border: 1px solid #2383e2; }
+        .container { padding: 10px; max-width: 500px; margin: auto; }
+        .card { background: white; margin-bottom: 12px; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .photo-box { width: 85px; height: 85px; border: 2px dashed #2383e2; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background: #f0f7ff; flex-shrink: 0; }
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .inputs { flex-grow: 1; }
+        .inputs input { display: block; width: 100%; margin-bottom: 6px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .btn-save-fixed { position: fixed; bottom: 20px; left: 20px; right: 20px; padding: 20px; background: #2383e2; color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; z-index: 200; box-shadow: 0 5px 15px rgba(35,131,226,0.3); }
+    </style>
+</head>
+<body>
+    <div id="auth">
+        <div style="text-align:center; width:80%;">
+            <h2>ACCESSO GARAGE</h2>
+            <input type="password" id="pass" placeholder="Password" style="padding:15px; width:100%; border-radius:10px; border:none; text-align:center; font-size:18px;"><br><br>
+            <button onclick="login()" style="padding:15px; background:#2383e2; color:white; border:none; border-radius:10px; font-weight:bold; width:100%;">ENTRA</button>
+        </div>
+    </div>
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-btn btn-blue">➕ INSERISCI</a>
+            <a href="index.html" class="nav-btn btn-outline">☁️ CATALOGO</a>
+        </div>
+    </nav>
+    <div class="container" id="adminContainer"></div>
+    <button class="btn-save-fixed" id="saveBtn" onclick="saveAll()">SALVA NEL CLOUD</button>
+
+    <script>
+        const ADMIN_PASS = "Furia1234";
+        function login() {
+            if(document.getElementById('pass').value === ADMIN_PASS) {
+                document.getElementById('auth').style.display = 'none';
+                sessionStorage.setItem('sibimoto_auth', 'ok');
+            } else { alert("Password Errata!"); }
+        }
+        if(sessionStorage.getItem('sibimoto_auth') === 'ok') document.getElementById('auth').style.display = 'none';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxKhoN8xlYTB2IGTssVrT_oxyhp5b6VIk",
+            authDomain: "garage-9548b.firebaseapp.com",
+            projectId: "garage-9548b",
+            storageBucket: "garage-9548b.firebasestorage.app",
+            messagingSenderId: "370272576490",
+            appId: "1:370272576490:web:2019a4ff01bf7f3ab9c893"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const photos = Array(4).fill(null);
+
+        // Generiamo solo 4 slot di inserimento
+        for(let i=0; i<4; i++) {
+            document.getElementById('adminContainer').innerHTML += `
+                <div class="card">
+                    <div class="photo-box" onclick="document.getElementById('in-${i}').click()">
+                        <img id="img-${i}" style="display:none">
+                        <span id="plus-${i}" style="font-size:30px; color:#2383e2">+</span>
+                    </div>
+                    <input type="file" id="in-${i}" style="display:none" accept="image/*" onchange="processImg(event, ${i})">
+                    <div class="inputs">
+                        <input type="text" id="mod-${i}" placeholder="Veicolo / Modello">
+                        <input type="text" id="tar-${i}" placeholder="Targa">
+                        <input type="text" id="pos-${i}" placeholder="Posizione">
+                        <input type="text" id="lib-${i}" placeholder="Note Libretto">
+                    </div>
+                </div>`;
+        }
+
+        function processImg(e, i) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.src = ev.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX = 500;
+                    let w = img.width, h = img.height;
+                    if (w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } }
+                    else { if(h > MAX){ w *= MAX/h; h = MAX; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    photos[i] = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById(`img-${i}`).src = photos[i];
+                    document.getElementById(`img-${i}`).style.display = 'block';
+                    document.getElementById(`plus-${i}`).style.display = 'none';
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveAll() {
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = "INVIO IN CORSO...";
+            btn.disabled = true;
+            
+            // Generiamo un ID basato sul timestamp per non sovrascrivere gli slot
+            const timestamp = Date.now();
+            
+            for(let i=0; i<4; i++) {
+                const m = document.getElementById(`mod-${i}`).value;
+                const t = document.getElementById(`tar-${i}`).value;
+                const p = document.getElementById(`pos-${i}`).value;
+                const l = document.getElementById(`lib-${i}`).value;
+                
+                if(m || photos[i]) {
+                    // Usiamo un ID univoco per ogni nuovo inserimento
+                    await db.collection("garage_db").doc("moto_" + timestamp + "_" + i).set({
+                        modello: m, targa: t, posizione: p, libretto: l, foto: photos[i] || null, dataInserimento: timestamp
+                    });
+                }
+            }
+            alert("Dati inviati al cloud!");
+            location.reload(); // Svuota la pagina per un nuovo inserimento
+        }
+    </script>
+</body>
+</html>
