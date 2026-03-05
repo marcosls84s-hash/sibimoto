@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SibiMoto Inventario 5</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background-color: #f7f6f3; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+        nav { background: white; border-bottom: 1px solid #ddd; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo { font-weight: bold; font-size: 18px; color: #2383e2; }
+        .btn-group { display: flex; gap: 8px; }
+        button { padding: 8px 12px; border-radius: 6px; border: none; font-weight: bold; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
+        .btn-pdf { background-color: #2383e2; color: white; }
+        .btn-clear { background-color: #eee; color: #666; }
+        button:active { opacity: 0.6; }
+        
+        .container { padding: 10px; max-width: 600px; margin: auto; }
+        
+        .row-card { background: white; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 15px; padding: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .row-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        .row-number { font-size: 11px; color: #aaa; font-weight: bold; }
+        
+        .row-content { display: flex; gap: 12px; align-items: flex-start; }
+        
+        .photo-box { 
+            width: 85px; height: 85px; border: 2px dashed #2383e2; border-radius: 8px; 
+            background: #f0f7ff; display: flex; align-items: center; justify-content: center; 
+            flex-shrink: 0; overflow: hidden; cursor: pointer; position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .plus-icon { width: 24px; height: 24px; fill: #2383e2; }
+        .has-img .plus-icon { display: none; }
+
+        .inputs { flex-grow: 1; }
+        .field { margin-bottom: 8px; }
+        label { display: block; font-size: 10px; color: #999; text-transform: uppercase; margin-bottom: 2px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; box-sizing: border-box; background: #fff; -webkit-appearance: none; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; justify-content: center; align-items: center; z-index: 1000; font-weight: bold; flex-direction: column; gap: 10px; }
+        .spinner { width: 30px; height: 30px; border: 4px solid #fff; border-top: 4px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        Generazione PDF in corso...
+    </div>
+
+    <nav>
+        <div class="logo">SibiMoto</div>
+        <div class="btn-group">
+            <button class="btn-clear" onclick="if(confirm('Svuotare tutto?')) window.location.reload()">Svuota</button>
+            <button class="btn-pdf" id="pdfBtn" onclick="generatePDF()">Genera PDF</button>
+        </div>
+    </nav>
+
+    <div class="container" id="mainContainer">
+        <!-- Generazione di 5 righe -->
+        <script>
+            for (let i = 0; i < 5; i++) {
+                document.write(`
+                    <div class="row-card">
+                        <div class="row-header"><span class="row-number">MEZZO #${i+1}</span></div>
+                        <div class="row-content">
+                            <div class="photo-box" id="box-${i}" onclick="document.getElementById('in-${i}').click()">
+                                <svg class="plus-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                                <img id="img-${i}" style="display:none">
+                            </div>
+                            <input type="file" id="in-${i}" style="display:none" accept="image/*" capture="camera" onchange="previewAndCompress(this, ${i})">
+                            <div class="inputs">
+                                <div class="field"><label>Modello</label><input type="text" id="mod-${i}" placeholder="Modello"></div>
+                                <div class="field"><label>Targa</label><input type="text" id="tar-${i}" placeholder="Targa" style="text-transform:uppercase"></div>
+                                <div class="field"><label>Posizione</label><input type="text" id="pos-${i}" placeholder="Posizione"></div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+        </script>
+    </div>
+
+    <script>
+        const photos = Array(5).fill(null);
+
+        function previewAndCompress(input, i) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const tempImg = new Image();
+                    tempImg.src = e.target.result;
+                    tempImg.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 800; 
+                        let width = tempImg.width;
+                        let height = tempImg.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                        } else {
+                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(tempImg, 0, 0, width, height);
+                        
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        photos[i] = compressedBase64;
+                        
+                        const imgDisplay = document.getElementById('img-' + i);
+                        imgDisplay.src = compressedBase64;
+                        imgDisplay.style.display = 'block';
+                        document.getElementById('box-' + i).classList.add('has-img');
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const loader = document.getElementById('loading');
+            loader.style.display = 'flex';
+
+            await new Promise(r => setTimeout(r, 600));
+
+            try {
+                const doc = new jsPDF();
+                let hasData = false;
+                let currentY = 30;
+
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(35, 131, 226);
+                doc.text("INVENTARIO SCOOTER SIBIMOTO", 15, 15);
+                doc.setFontSize(10);
+                doc.setTextColor(150);
+                doc.text("Report generato il: " + new Date().toLocaleString(), 15, 22);
+
+                for (let i = 0; i < 5; i++) {
+                    const mod = document.getElementById('mod-' + i).value;
+                    const tar = document.getElementById('tar-' + i).value;
+                    const pos = document.getElementById('pos-' + i).value;
+
+                    if (mod || photos[i] || tar) {
+                        hasData = true;
+                        if (currentY > 240) { doc.addPage(); currentY = 20; }
+
+                        doc.setDrawColor(220);
+                        doc.setFillColor(255, 255, 255);
+                        doc.roundedRect(15, currentY, 180, 45, 2, 2, 'FD');
+
+                        if (photos[i]) {
+                            doc.addImage(photos[i], 'JPEG', 18, currentY + 3, 33, 39);
+                        }
+
+                        doc.setFontSize(12); doc.setTextColor(0);
+                        doc.text("MODELLO: " + mod.toUpperCase(), 55, currentY + 12);
+                        doc.setFontSize(10); doc.setTextColor(35, 131, 226);
+                        doc.text("TARGA: " + tar.toUpperCase(), 55, currentY + 22);
+                        doc.setTextColor(100);
+                        doc.text("UBICAZIONE: " + pos, 55, currentY + 32);
+
+                        currentY += 50;
+                    }
+                }
+
+                if (!hasData) {
+                    alert("Compila almeno un campo o carica una foto!");
+                } else {
+                    doc.save("Inventario_SibiMoto_5.pdf");
+                }
+            } catch (err) {
+                alert("Errore PDF: " + err.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
