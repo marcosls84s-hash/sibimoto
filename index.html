@@ -2,264 +2,106 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SibiMoto Inventario 20 Compact</title>
-    <!-- Libreria PDF esterna -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SibiMoto - Catalogo Cloud</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        /* Reset e Stili Base */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background-color: #f0f2f5; 
-            margin: 0; 
-            padding: 0; 
-            color: #1a1a1b;
-        }
-        
-        /* Navigazione */
-        nav { 
-            background: white; 
-            border-bottom: 1px solid #ddd; 
-            padding: 10px 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100;
-        }
-        .logo { font-weight: 800; font-size: 18px; color: #2383e2; }
-        
-        .btn-group { display: flex; gap: 8px; }
-        button { 
-            padding: 8px 14px; 
-            border-radius: 6px; 
-            border: none; 
-            font-weight: bold; 
-            font-size: 13px; 
-            cursor: pointer; 
-        }
-        .btn-pdf { background-color: #2383e2; color: white; }
-        .btn-clear { background-color: #e4e6eb; color: #4b4b4b; }
-        
-        /* Contenitore */
-        .container { padding: 10px; max-width: 500px; margin: auto; }
-        
-        /* Card Scooter */
-        .row-card { 
-            background: white; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            margin-bottom: 10px; 
-            padding: 10px; 
-        }
-        .row-header { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 8px; 
-            border-bottom: 1px solid #eee; 
-            padding-bottom: 4px; 
-        }
-        .row-number { font-size: 9px; color: #888; font-weight: 800; }
-        
-        .row-content { display: flex; gap: 10px; align-items: center; }
-        
-        /* Box Foto */
-        .photo-box { 
-            width: 70px; height: 70px; 
-            border: 2px dashed #ccc; 
-            border-radius: 6px; 
-            background: #fafafa; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            flex-shrink: 0; 
-            overflow: hidden; 
-            cursor: pointer;
-        }
-        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        .plus-icon { width: 20px; height: 20px; fill: #2383e2; }
-        .has-img .plus-icon { display: none; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 30px; }
+        nav { background: white; padding: 10px; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-container { max-width: 1000px; margin: auto; display: flex; gap: 10px; align-items: center; }
+        .nav-btn { flex: 1; padding: 12px; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; border: none; cursor: pointer; }
+        .btn-blue { background: #2383e2; color: white; }
+        .btn-outline { background: white; color: #2383e2; border: 1px solid #2383e2; }
+        .logo-text { font-weight: 900; color: #2383e2; font-size: 18px; margin-right: 15px; }
 
-        /* Input */
-        .inputs { flex-grow: 1; display: grid; grid-template-columns: 1fr; gap: 4px; }
-        .field { display: flex; align-items: center; gap: 5px; }
-        label { font-size: 8px; color: #999; font-weight: 700; min-width: 45px; text-transform: uppercase; }
-        input { 
-            flex-grow: 1;
-            padding: 5px 8px; 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
-            font-size: 14px; 
-            background: #fff; 
-        }
+        .search-section { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        #searchInput { width: 100%; padding: 18px; border-radius: 15px; border: 2px solid #2383e2; font-size: 16px; box-sizing: border-box; outline: none; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1000px; margin: 0 auto; padding: 0 15px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); position: relative; }
+        .card img { width: 100%; height: 140px; object-fit: cover; background: #eee; }
+        .info { padding: 12px; }
+        .modello { font-weight: bold; text-transform: uppercase; font-size: 14px; color: #333; }
+        .targa { color: #2383e2; font-size: 12px; font-weight: bold; background: #f0f7ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin: 5px 0; }
+        .dettaglio { font-size: 11px; color: #666; margin-top: 4px; border-top: 1px solid #f9f9f9; padding-top: 4px; }
         
-        /* Loading */
-        .loading-overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.9); 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; 
-            flex-direction: column; 
-        }
-        .spinner { 
-            width: 30px; height: 30px; 
-            border: 3px solid #f3f3f3; 
-            border-top: 3px solid #2383e2; 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn-delete-cloud { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.9); border: 1px solid #ffcccc; color: #ff4444; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
-    <div id="loading" class="loading-overlay">
-        <div class="spinner"></div>
-        <p style="font-weight: bold; margin-top: 10px;">Compattazione PDF...</p>
-    </div>
-
     <nav>
-        <div class="logo">SIBIMOTO</div>
-        <div class="btn-group">
-            <button class="btn-clear" onclick="window.location.reload()">Svuota</button>
-            <button class="btn-pdf" onclick="generatePDF()">Genera PDF A4</button>
+        <div class="nav-container">
+            <span class="logo-text">SIBIMOTO</span>
+            <a href="admin.html" class="nav-btn btn-outline">➕ INSERISCI</a>
+            <a href="#" class="nav-btn btn-blue">☁️ CATALOGO</a>
         </div>
     </nav>
 
-    <div class="container" id="mainContainer">
-        <script>
-            for (let i = 0; i < 20; i++) {
-                document.write(`
-                    <div class="row-card">
-                        <div class="row-header"><span class="row-number">UNITÀ #${i+1}</span></div>
-                        <div class="row-content">
-                            <div class="photo-box" id="box-${i}" onclick="document.getElementById('in-${i}').click()">
-                                <svg class="plus-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                                <img id="img-${i}" style="display:none">
-                            </div>
-                            <input type="file" id="in-${i}" style="display:none" accept="image/*" capture="camera" onchange="handleImage(this, ${i})">
-                            <div class="inputs">
-                                <div class="field"><label>Modello</label><input type="text" id="mod-${i}" placeholder="SH 150"></div>
-                                <div class="field"><label>Targa</label><input type="text" id="tar-${i}" placeholder="Targa" style="text-transform:uppercase"></div>
-                                <div class="field"><label>Pos.</label><input type="text" id="pos-${i}" placeholder="Fila/Posto"></div>
-                            </div>
-                        </div>
-                    </div>
-                `);
-            }
-        </script>
+    <div class="search-section">
+        <input type="text" id="searchInput" placeholder="Cerca targa, modello, posizione..." onkeyup="filterMoto()">
     </div>
 
-    <script>
-        const photos = Array(20).fill(null);
+    <div class="grid" id="lista"></div>
 
-        function handleImage(input, i) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const tempImg = new Image();
-                    tempImg.src = e.target.result;
-                    tempImg.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const MAX = 600; 
-                        let w = tempImg.width, h = tempImg.height;
-                        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
-                        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(tempImg, 0, 0, w, h);
-                        photos[i] = canvas.toDataURL('image/jpeg', 0.6);
-                        document.getElementById('img-' + i).src = photos[i];
-                        document.getElementById('img-' + i).style.display = 'block';
-                        document.getElementById('box-' + i).classList.add('has-img');
-                    }
-                }
-                reader.readAsDataURL(input.files[0]);
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxKhoN8xlYTB2IGTssVrT_oxyhp5b6VIk",
+            authDomain: "garage-9548b.firebaseapp.com",
+            projectId: "garage-9548b",
+            storageBucket: "garage-9548b.firebasestorage.app",
+            messagingSenderId: "370272576490",
+            appId: "1:370272576490:web:2019a4ff01bf7f3ab9c893"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let motoList = [];
+
+        // Carichiamo tutte le moto ordinate per data (le più recenti prima)
+        db.collection("garage_db").orderBy("dataInserimento", "desc").onSnapshot(snap => {
+            motoList = [];
+            snap.forEach(doc => {
+                const data = doc.data();
+                motoList.push({ id: doc.id, ...data });
+            });
+            renderGrid(motoList);
+        });
+
+        async function removeMoto(id) {
+            if(confirm("Questa moto è stata venduta? Verrà eliminata definitivamente dal catalogo.")) {
+                try {
+                    await db.collection("garage_db").doc(id).delete();
+                    alert("Moto rimossa dal catalogo.");
+                } catch(e) { alert("Errore durante la rimozione."); }
             }
         }
 
-        async function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const loader = document.getElementById('loading');
-            loader.style.display = 'flex';
-            await new Promise(r => setTimeout(r, 500));
+        function renderGrid(data) {
+            const container = document.getElementById('lista');
+            container.innerHTML = "";
+            data.forEach(d => {
+                container.innerHTML += `
+                    <div class="card">
+                        <button class="btn-delete-cloud" onclick="removeMoto('${d.id}')">🗑️</button>
+                        <img src="${d.foto || 'https://placehold.co/400x300?text=SibiMoto'}">
+                        <div class="info">
+                            <div class="modello">${d.modello || '---'}</div>
+                            <div class="targa">${d.targa || '---'}</div>
+                            <div class="dettaglio">📍 <b>${d.posizione || '-'}</b></div>
+                            <div class="dettaglio">📄 ${d.libretto || '-'}</div>
+                        </div>
+                    </div>`;
+            });
+        }
 
-            try {
-                const doc = new jsPDF();
-                let hasData = false;
-                let y = 25;
-                let page = 1;
-
-                function header() {
-                    doc.setFillColor(35, 131, 226);
-                    doc.rect(0, 0, 210, 15, 'F');
-                    doc.setTextColor(255);
-                    doc.setFontSize(12);
-                    doc.text("SIBIMOTO - Inventario Rapido", 15, 10);
-                    doc.setFontSize(8);
-                    doc.text("Pagina " + page, 185, 10);
-                }
-
-                header();
-
-                for (let i = 0; i < 20; i++) {
-                    const mod = document.getElementById('mod-' + i).value;
-                    const tar = document.getElementById('tar-' + i).value;
-                    const pos = document.getElementById('pos-' + i).value;
-
-                    if (mod || photos[i] || tar) {
-                        hasData = true;
-                        
-                        // Controllo salto pagina (10 unità per pagina circa)
-                        if (y > 270) { 
-                            doc.addPage();
-                            page++;
-                            y = 25;
-                            header();
-                        }
-
-                        // Riga ultra compatta (altezza 24mm)
-                        doc.setDrawColor(230);
-                        doc.line(15, y - 5, 195, y - 5); // Linea separatrice
-
-                        // Foto mini
-                        if (photos[i]) {
-                            doc.addImage(photos[i], 'JPEG', 15, y, 22, 22);
-                        } else {
-                            doc.setDrawColor(240);
-                            doc.rect(15, y, 22, 22);
-                            doc.setFontSize(6); doc.setTextColor(200);
-                            doc.text("NO FOTO", 19, y + 12);
-                        }
-
-                        // Testi affiancati
-                        doc.setTextColor(0);
-                        doc.setFontSize(10); doc.setFont("helvetica", "bold");
-                        doc.text("#" + (i+1) + " " + (mod.toUpperCase() || "---"), 42, y + 5);
-                        
-                        doc.setFontSize(9); doc.setFont("helvetica", "normal");
-                        doc.setTextColor(35, 131, 226);
-                        doc.text("TARGA: " + (tar.toUpperCase() || "---"), 42, y + 12);
-                        
-                        doc.setTextColor(100);
-                        doc.text("POSIZIONE: " + (pos || "---"), 42, y + 19);
-
-                        y += 26; // Incremento verticale ridotto
-                    }
-                }
-
-                if (!hasData) alert("Inserisci dati!");
-                else doc.save("SibiMoto_A4_Compatto.pdf");
-            } catch (e) {
-                alert(e.message);
-            } finally {
-                loader.style.display = 'none';
-            }
+        function filterMoto() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = motoList.filter(m => {
+                return (m.modello || "").toLowerCase().includes(val) || 
+                       (m.targa || "").toLowerCase().includes(val) ||
+                       (m.posizione || "").toLowerCase().includes(val);
+            });
+            renderGrid(filtered);
         }
     </script>
 </body>
